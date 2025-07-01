@@ -37,22 +37,42 @@ def read_diaper_data(folder: str, baby: BabyName, max_date: datetime | None = No
     return diapers
 
 
+@dataclass(frozen=True, kw_only=True)
+class SleepData:
+    baby: BabyName
+    time: datetime
+    duration: float
+
+
+def read_sleep_data(folder: str, baby: BabyName, max_date: datetime | None = None) -> list[SleepData]:
+    file = f"{folder}/{baby}_sleep.csv"
+    with open(file, "r", newline='') as fp:
+        sleeps = [SleepData(baby=row['Baby'], time=datetime.strptime(row["Time"], TIME_FORMAT), duration=int(row["Duration (min)"].replace(",", ""))) for row in csv.DictReader(fp) if len(row["Duration (min)"]) > 0]
+    
+    if max_date is not None:
+        sleeps = [d for d in sleeps if d.time < max_date]
+
+    return sleeps
+
+
 def main():
     DATA_FOLDER = "./data/export_20250701"
-    MAX_DATE_LILY = datetime(2022, 9, 24)
-    MAX_DATE_EVIE = datetime(2025, 7, 6)
+    MAX_DATES = {BabyName.LILY: datetime(2022, 9, 24), BabyName.EVIE: datetime(2025, 7, 6)}
 
-    lily_diapers = read_diaper_data(folder=DATA_FOLDER, baby=BabyName.LILY, max_date=MAX_DATE_LILY)
-    print("Lily Diapers:")
-    for status in DiaperStatus:
-        print(f"{status} = {len(lily_diapers[status])}")
-    print(f"Total = {sum(len(v) for v in lily_diapers.values())}")
-    
-    evie_diapers = read_diaper_data(folder=DATA_FOLDER, baby=BabyName.EVIE, max_date=MAX_DATE_EVIE)
-    print("Evie Diapers:")
-    for status in DiaperStatus:
-        print(f"{status} = {len(evie_diapers[status])}")
-    print(f"Total = {sum(len(v) for v in evie_diapers.values())}")
+    for baby_name in BabyName:
+        print(f"{baby_name} Data:")
+        diapers = read_diaper_data(folder=DATA_FOLDER, baby=baby_name, max_date=MAX_DATES[baby_name])
+        print(f"\tDiapers:")
+        for status in DiaperStatus:
+            print(f"\t\t{status} = {len(diapers[status])}")
+        print(f"\t\tTotal = {sum(len(v) for v in diapers.values())}")
+        
+        sleeps = read_sleep_data(folder=DATA_FOLDER, baby=baby_name, max_date=MAX_DATES[baby_name])
+        print(f"\tSleeps:")
+        print(f"\t\tTotal: {len(sleeps)}")
+        print(f"\t\tShortest: {min(s.duration for s in sleeps)}")
+        print(f"\t\tLongest: {max(s.duration for s in sleeps)}")
+
 
 if __name__ == "__main__":
     main()
