@@ -97,7 +97,7 @@ def read_nursing_data(folder: str, baby: BabyName, max_date: datetime | None = N
     return nursings
 
 
-def plot_sleep_data(sleeps: list[SleepData], min_date: datetime, max_date: datetime):
+def plot_sleep_data(baby: BabyName, sleeps: list[SleepData], min_date: datetime, max_date: datetime, save_fig: bool = False, folder: str | None = None):
     LINEWIDTH = 0.5
 
     COLOR_AWAKE = "#d1c580"
@@ -161,6 +161,11 @@ def plot_sleep_data(sleeps: list[SleepData], min_date: datetime, max_date: datet
     ax.grid(False)
     ax.set_axis_off()
 
+    if save_fig and folder is not None:
+        fig_file = f"{folder}/sleep_{baby.lower()}.png"
+        print(f"Saving plot to file: {fig_file}")
+        plt.savefig(fig_file, bbox_inches='tight')
+
 
 def main():
     DATA_FOLDER = "./data/export_20250701"
@@ -184,7 +189,7 @@ def main():
         print(f"\tShortest: {min(s.duration for s in sleeps)} minutes")
         print(f"\tLongest: {max(s.duration for s in sleeps)} minutes")
         
-        plot_sleep_data(sleeps=sleeps, min_date=MIN_DATES[baby_name], max_date=MAX_DATES[baby_name])
+        plot_sleep_data(baby=baby_name, sleeps=sleeps, min_date=MIN_DATES[baby_name], max_date=MAX_DATES[baby_name], save_fig=True, folder=DATA_FOLDER)
 
     # Nursing data
     for baby_name in BabyName:
