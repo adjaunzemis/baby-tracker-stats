@@ -47,7 +47,11 @@ class SleepData:
 def read_sleep_data(folder: str, baby: BabyName, max_date: datetime | None = None) -> list[SleepData]:
     file = f"{folder}/{baby}_sleep.csv"
     with open(file, "r", newline="") as fp:
-        sleeps = [SleepData(baby=row["Baby"], time=datetime.strptime(row["Time"], TIME_FORMAT), duration=int(row["Duration (min)"].replace(",", ""))) for row in csv.DictReader(fp) if len(row["Duration (min)"]) > 0]
+        sleeps = [SleepData(
+            baby=row["Baby"],
+            time=datetime.strptime(row["Time"], TIME_FORMAT),
+            duration=int(row["Duration (min)"].replace(",", ""))
+        ) for row in csv.DictReader(fp) if len(row["Duration (min)"]) > 0]
     
     if max_date is not None:
         sleeps = [d for d in sleeps if d.time < max_date]
@@ -67,7 +71,7 @@ class NursingData:
     start_side: NursingSide
     left_duration: int
     right_duration: int
-    total: int
+    total_duration: int
 
     
 
@@ -80,7 +84,7 @@ def read_nursing_data(folder: str, baby: BabyName, max_date: datetime | None = N
             start_side=row["Start side"],
             left_duration=int(row["Left duration (min)"]) if len(row["Left duration (min)"]) > 0 else 0,
             right_duration=int(row["Right Duration (min)"]) if len(row["Right Duration (min)"]) > 0 else 0,
-            total=int(row["Total (min)"]),
+            total_duration=int(row["Total (min)"]),
         ) for row in csv.DictReader(fp) if len(row["Total (min)"]) > 0]
     
     if max_date is not None:
@@ -106,6 +110,7 @@ def main():
         sleeps = read_sleep_data(folder=DATA_FOLDER, baby=baby_name, max_date=MAX_DATES[baby_name])
         print(f"{baby_name} Sleeps:")
         print(f"\tCount: {len(sleeps)}")
+        print(f"\tTotal: {sum(s.duration for s in sleeps)} minutes, or {sum(s.duration for s in sleeps) / (24*60):.1f} days")
         print(f"\tShortest: {min(s.duration for s in sleeps)} minutes")
         print(f"\tLongest: {max(s.duration for s in sleeps)} minutes")
 
@@ -114,19 +119,19 @@ def main():
         nursings = read_nursing_data(folder=DATA_FOLDER, baby=baby_name, max_date=MAX_DATES[baby_name])
         print(f"{baby_name} Nursings:")
         print(f"\tCount: {len(nursings)}")
-        print(f"\tTotal: {sum(n.total for n in nursings)} minutes")
-        print(f"\tShortest: {min(n.total for n in nursings)} minutes")
-        print(f"\tLongest: {max(n.total for n in nursings)} minutes")
+        print(f"\tTotal: {sum(n.total_duration for n in nursings)} minutes, or {sum(n.total_duration for n in nursings) / (24 * 60):.1f} days")
+        print(f"\tShortest: {min(n.total_duration for n in nursings)} minutes")
+        print(f"\tLongest: {max(n.total_duration for n in nursings)} minutes")
 
         nursings_left = [n for n in nursings if n.left_duration > 0]
         print(f"\tLeft Count: {len(nursings_left)}")
-        print(f"\tLeft Total: {sum(n.left_duration for n in nursings_left)} minutes")
+        print(f"\tLeft Total: {sum(n.left_duration for n in nursings_left)} minutes, or {sum(n.left_duration for n in nursings_left) / (24 * 60):.1f} days")
         print(f"\tLeft Shortest: {min(n.left_duration for n in nursings_left)} minutes")
         print(f"\tLeft Longest: {max(n.left_duration for n in nursings_left)} minutes")
         
         nursings_right = [n for n in nursings if n.right_duration > 0]
         print(f"\tRight Count: {len(nursings_right)}")
-        print(f"\tRight Total: {sum(n.right_duration for n in nursings_right)} minutes")
+        print(f"\tRight Total: {sum(n.right_duration for n in nursings_right)} minutes, or {sum(n.right_duration for n in nursings_right) / (24 * 60):.1f} days")
         print(f"\tRight Shortest: {min(n.right_duration for n in nursings_right)} minutes")
         print(f"\tRight Longest: {max(n.right_duration for n in nursings_right)} minutes")
 
