@@ -8,7 +8,7 @@ COLOR_ASLEEP = "#264794"
 R_MIN = 0.5
 R_MAX = 1.0
 
-NUM_SEGMENTS = 365
+NUM_SEGMENTS = 10
 NUM_SAMPLES = 100
 
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
